@@ -1,0 +1,20 @@
+name: Repository policy drift
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '43 6 * * 1'
+permissions:
+  contents: read
+jobs:
+  repository-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          set-safe-directory: false
+      - run: python3 -B scripts/github_policy_test.py
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -B scripts/github-policy.py audit --public-only

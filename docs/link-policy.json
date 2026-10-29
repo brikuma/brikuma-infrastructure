@@ -1,0 +1,12 @@
+{
+  "parentLinks": [
+    "AGENTS.md:../AGENTS.md",
+    "AGENTS.md:../docs/REPOSITORIES.md",
+    "CLAUDE.md:../AGENTS.md",
+    "README.md:../docs/README.md",
+    "README.md:../docs/REPOSITORIES.md",
+    "docs/README.md:../../brikuma-frontend/README.md",
+    "docs/README.md:../../docs/QUALITY_GATES.md",
+    "docs/README.md:../../docs/REPOSITORIES.md"
+  ]
+}

@@ -1,21 +1,7 @@
-# Security Policy
+# Security reporting
 
-## Supported Versions
+This repository contains documentation and repository-governance tooling only. It has no deployed service or application backend.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Use [GitHub Private Vulnerability Reporting](https://github.com/brikuma/brikuma-infrastructure/security/advisories/new) once it is enabled at publication. Until activation, that channel is unavailable; do not publish private findings in an issue. No personal email security contact is published.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
-
-## Reporting a Vulnerability
-
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Do not commit credentials, private contact information, personal paths or conversation links. Follow [privacy setup](PRIVACY.md) and preserve upstream licenses. Original material uses [MIT](LICENSE).

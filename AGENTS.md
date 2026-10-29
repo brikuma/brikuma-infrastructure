@@ -4,4 +4,4 @@ Read [global instructions](../AGENTS.md), [global repository policy](../docs/REP
 
 This child is documentation/bootstrap metadata only for the current frontend POC. Do not add application code, APIs, databases, providers, containers, deployment or runtime dependencies. Preserve independent history. Use English Conventional Commits scoped to actual documentation. No push, history rewrite or invented remote is authorized.
 
-Full runtime hooks are deferred until this child owns implementation tooling; documentation and commit review remain required. See [README](README.md) and [Claude adapter](CLAUDE.md).
+Repository-local documentation/privacy hooks and the `privacy`/`docs-required-gate` CI checks are required; application runtime tooling remains deferred. Follow [privacy setup](PRIVACY.md). See [README](README.md) and [Claude adapter](CLAUDE.md).

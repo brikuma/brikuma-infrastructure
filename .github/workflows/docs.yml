@@ -1,0 +1,27 @@
+name: Documentation
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          set-safe-directory: false
+      - run: python3 -B scripts/docs_test.py
+      - run: python3 -B scripts/docs-check.py
+  docs-required-gate:
+    if: always()
+    needs: docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - env:
+          DOCS_RESULT: ${{ needs.docs.result }}
+        run: test "$DOCS_RESULT" = success

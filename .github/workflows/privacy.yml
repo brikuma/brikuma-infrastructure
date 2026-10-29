@@ -1,0 +1,52 @@
+name: Privacy
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 6 * * 1'
+permissions:
+  contents: read
+jobs:
+  privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out policy from the approved PR base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: approved-policy
+          persist-credentials: false
+          set-safe-directory: false
+      - name: Check out the integration result and complete history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+          set-safe-directory: false
+      - name: Require the established privacy policy
+        run: test -f approved-policy/scripts/privacy.py
+      - name: Install the checksum-pinned scanner from approved policy
+        run: python3 -B approved-policy/scripts/privacy-install.py
+      - name: Test the approved scanner
+        run: python3 -B approved-policy/scripts/privacy_test.py
+      - name: Inspect every introduced commit and the integration result
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          INTEGRATION: ${{ github.sha }}
+        run: python3 -B approved-policy/scripts/privacy.py range --repo candidate --base "$PR_BASE" --head "$PR_HEAD" --integration "$INTEGRATION"
+      - name: Include available open and closed pull request refs
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: candidate
+        run: |
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" fetch origin '+refs/pull/*/head:refs/privacy/pull/*/head' '+refs/pull/*/merge:refs/privacy/pull/*/merge'
+      - name: Inspect all available history
+        if: github.event_name != 'pull_request'
+        run: python3 -B approved-policy/scripts/privacy.py full --repo candidate --all-objects

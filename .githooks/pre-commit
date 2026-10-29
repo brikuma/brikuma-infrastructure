@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+python3 -B scripts/privacy.py staged
+python3 -B scripts/docs-check.py

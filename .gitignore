@@ -1,0 +1,4 @@
+/.tools/
+/artifacts/
+**/__pycache__/
+*.pyc
