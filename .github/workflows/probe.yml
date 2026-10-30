@@ -1,0 +1,22 @@
+name: Publication ruleset probe
+on:
+  pull_request:
+    branches: [publication-verification/main]
+permissions:
+  contents: read
+jobs:
+  privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Read the synthetic expected result
+        run: test "$(cat privacy-result)" = pass
+  docs-required-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Identify this synthetic control test
+        run: echo 'Ruleset probe only; this is not application verification.'
