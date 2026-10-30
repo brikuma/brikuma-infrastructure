@@ -77,6 +77,12 @@ def main():
     if args.organization:
         check('organization','orgs/brikuma',expected['organization'])
         check('organization-actions','orgs/brikuma/actions/permissions',expected['organizationActions'])
+        check('organization-allowed-actions','orgs/brikuma/actions/permissions/selected-actions',expected['organizationAllowedActions'])
+        check('organization-workflow-permissions','orgs/brikuma/actions/permissions/workflow',expected['workflowPermissions'])
+        configuration = expected['organizationSecurityConfiguration']
+        check('organization-security-configuration','orgs/brikuma/code-security/configurations/' + str(configuration['id']), configuration)
+        check('organization-security-defaults','orgs/brikuma/code-security/configurations/defaults',
+              [{'default_for_new_repos':'public','configuration':{'id':configuration['id']}}])
         check('maintainers','orgs/brikuma/teams/maintainers',{'id':expected['maintainersTeamId'],'privacy':'closed'})
         check('maintainer-members','orgs/brikuma/teams/maintainers/members?per_page=100',[{'login':'MatteoVincenti'}])
         # OAuth approval and PAT lifetime are UI-only policies; require separate recorded verification.

@@ -28,13 +28,13 @@ class PolicyTests(unittest.TestCase):
         }
         self.responses.update({self.prefix+'/rulesets/'+str(i):r for i,r in enumerate(self.expected['rulesets'])})
 
-    def run_audit(self, public=False):
+    def run_audit(self, public=False, organization=False):
         def api(endpoint):
             value=self.responses.get(endpoint)
             if value is None: raise ValueError('Synthetic unavailable surface')
             return value
         output=io.StringIO()
-        with patch.object(policy,'api',api), patch.object(sys,'argv',['policy','audit']+(['--public-only'] if public else [])), contextlib.redirect_stdout(output):
+        with patch.object(policy,'api',api), patch.object(sys,'argv',['policy','audit']+(['--public-only'] if public else [])+(['--organization'] if organization else [])), contextlib.redirect_stdout(output):
             status=policy.main()
         return status,json.loads(output.getvalue())
 
@@ -130,6 +130,34 @@ class PolicyTests(unittest.TestCase):
                 self.assertEqual(self.run_audit()[0], 1)
                 if change not in ['bypass-mode', 'extra-actor']:
                     self.assertEqual(self.run_audit(True)[0], 1)
+
+    def organization_responses(self):
+        expected = self.expected
+        configuration = expected['organizationSecurityConfiguration']
+        self.responses.update({
+            'orgs/brikuma': expected['organization'],
+            'orgs/brikuma/actions/permissions': expected['organizationActions'],
+            'orgs/brikuma/actions/permissions/selected-actions': expected['organizationAllowedActions'],
+            'orgs/brikuma/actions/permissions/workflow': expected['workflowPermissions'],
+            'orgs/brikuma/code-security/configurations/' + str(configuration['id']): configuration,
+            'orgs/brikuma/code-security/configurations/defaults': [{'default_for_new_repos': 'public', 'configuration': {'id': configuration['id']}}],
+            'orgs/brikuma/teams/maintainers': {'id': expected['maintainersTeamId'], 'privacy': 'closed'},
+            'orgs/brikuma/teams/maintainers/members?per_page=100': [{'login': 'MatteoVincenti'}],
+        })
+
+    def test_organization_rest_pass_still_reports_ui_limit(self):
+        self.organization_responses()
+        code, report = self.run_audit(organization=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['findings'], [{'surface': 'oauth-and-token-ui-policy', 'status': 'not-verified-by-rest'}])
+
+    def test_organization_security_drift_is_reported(self):
+        self.organization_responses()
+        self.responses['orgs/brikuma/actions/permissions/selected-actions'] = {'github_owned_allowed': True, 'verified_allowed': True, 'patterns_allowed': []}
+        self.responses['orgs/brikuma/code-security/configurations/defaults'] = []
+        code, report = self.run_audit(organization=True)
+        self.assertEqual(code, 1)
+        self.assertTrue({'organization-allowed-actions', 'organization-security-defaults'}.issubset({x['surface'] for x in report['findings']}))
 
 if __name__ == '__main__':
     unittest.main()

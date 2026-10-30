@@ -26,7 +26,12 @@
     "members_can_create_public_repositories": false,
     "members_can_create_private_repositories": false,
     "members_can_delete_repositories": false,
-    "members_can_change_repo_visibility": false
+    "members_can_change_repo_visibility": false,
+    "members_can_create_teams": false,
+    "members_can_create_pages": false,
+    "members_can_create_public_pages": false,
+    "members_can_create_private_pages": false,
+    "members_can_fork_private_repositories": false
   },
   "workflowPermissions": {
     "default_workflow_permissions": "read",
@@ -130,6 +135,25 @@
     }
   ],
   "organizationActions": {
-    "sha_pinning_required": true
+    "sha_pinning_required": true,
+    "enabled_repositories": "all",
+    "allowed_actions": "selected"
+  },
+  "organizationAllowedActions": {
+    "github_owned_allowed": true,
+    "verified_allowed": false,
+    "patterns_allowed": []
+  },
+  "organizationSecurityConfiguration": {
+    "id": 289223,
+    "name": "BRIKUMA public repository security",
+    "enforcement": "enforced",
+    "dependency_graph": "enabled",
+    "dependabot_alerts": "enabled",
+    "dependabot_security_updates": "enabled",
+    "code_scanning_default_setup": "enabled",
+    "secret_scanning": "enabled",
+    "secret_scanning_push_protection": "enabled",
+    "private_vulnerability_reporting": "enabled"
   }
 }
