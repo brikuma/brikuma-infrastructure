@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Render or audit expected GitHub policy. This command never changes GitHub."""
 import argparse
+import copy
 import json
 from pathlib import Path
 import subprocess
@@ -20,6 +21,15 @@ def contains(actual, expected):
         return isinstance(actual, list) and len(actual) == len(expected) and all(any(contains(a, e) for a in actual) for e in expected)
     return actual == expected
 
+def normalize_ruleset(actual, repository):
+    """GitHub omits the inapplicable upstream-fetch flag on non-fork repositories."""
+    result = copy.deepcopy(actual)
+    if isinstance(repository, dict) and repository.get('fork') is False and isinstance(result, dict):
+        for rule in result.get('rules', []):
+            if isinstance(rule, dict) and rule.get('type') == 'update' and 'parameters' not in rule:
+                rule['parameters'] = {'update_allows_fetch_and_merge': False}
+    return result
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', choices=['render','audit'])
@@ -32,10 +42,11 @@ def main():
     findings = []
     not_checked = []
     repo = 'brikuma/' + expected['repository']
-    def check(label, endpoint, value):
+    def check(label, endpoint, value, normalize=None):
         try:
             actual = api(endpoint)
-            if not contains(actual, value): findings.append({'surface':label,'status':'drift'})
+            compared = normalize(actual) if normalize else actual
+            if not contains(compared, value): findings.append({'surface':label,'status':'drift'})
             return actual
         except ValueError:
             findings.append({'surface':label,'status':'not-verified'}); return None
@@ -50,7 +61,7 @@ def main():
         check('external-workflow-approval', 'repos/' + repo + '/actions/permissions/fork-pr-contributor-approval', expected['forkApproval'])
         check('dependabot-alerts', 'repos/' + repo + '/vulnerability-alerts', {})
         check('dependabot-security-updates', 'repos/' + repo + '/automated-security-fixes', {'enabled':True,'paused':False})
-    check('repository', 'repos/' + repo, settings)
+    repository = check('repository', 'repos/' + repo, settings)
     try:
         listed = api('repos/' + repo + '/rulesets?per_page=100')
         for required in expected['rulesets']:
@@ -59,7 +70,8 @@ def main():
             matches = [r for r in listed if r['name'] == required['name']]
             if len(matches) != 1:
                 findings.append({'surface':required['name'],'status':'missing-or-ambiguous'}); continue
-            check(required['name'], 'repos/' + repo + '/rulesets/' + str(matches[0]['id']), required)
+            check(required['name'], 'repos/' + repo + '/rulesets/' + str(matches[0]['id']), required,
+                  lambda actual: normalize_ruleset(actual, repository))
     except ValueError: findings.append({'surface':'rulesets','status':'not-verified'})
     check('private-reporting', 'repos/' + repo + '/private-vulnerability-reporting', {'enabled':True})
     if args.organization:
